@@ -112,83 +112,63 @@
 
       <button type="submit">Add to Diary</button>
     </form>
-    <div id="memory-list"></div>
-
 
     <div class="entries" id="entriesContainer"></div>
   </div>
 
- <script>
-  // Function to save a new memory
-  function saveMemory() {
-    const date = document.getElementById("date").value;
-    const event = document.getElementById("event").value;
-    const imageInput = document.getElementById("image");
-    const image = imageInput.files[0];
+  <script>
+    const form = document.getElementById('memoryForm');
+    const entriesContainer = document.getElementById('entriesContainer');
 
-    if (!date || !event || !image) {
-      alert("Please fill all fields and add a photo!");
-      return;
-    }
+    // Load entries from localStorage on page load
+    window.onload = function () {
+      const savedEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
+      savedEntries.forEach(entry => displayEntry(entry));
+    };
 
-    const reader = new FileReader();
-    reader.onload = function () {
-      const memory = {
-        date,
-        event,
-        image: reader.result
+    // Save and display new entry
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const date = document.getElementById('date').value;
+      const event = document.getElementById('event').value;
+      const imageInput = document.getElementById('image');
+      const file = imageInput.files[0];
+
+      const reader = new FileReader();
+
+      reader.onload = function() {
+        const imageUrl = file ? reader.result : '';
+        const newEntry = { date, event, imageUrl };
+
+        // Save to localStorage
+        const existingEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
+        existingEntries.push(newEntry);
+        localStorage.setItem('loveDiaryEntries', JSON.stringify(existingEntries));
+
+        displayEntry(newEntry);
+        form.reset();
       };
 
-      let memories = JSON.parse(localStorage.getItem("memories")) || [];
-      memories.push(memory);
-      localStorage.setItem("memories", JSON.stringify(memories));
-      displayMemories(); // Show updated list
-    };
-    reader.readAsDataURL(image);
-    
-    // Reset the form
-    document.getElementById("date").value = '';
-    document.getElementById("event").value = '';
-    document.getElementById("image").value = '';
-  }
-
-  // Function to display all saved memories
-  function displayMemories() {
-    const container = document.getElementById("memory-list");
-    container.innerHTML = "";
-    const memories = JSON.parse(localStorage.getItem("memories")) || [];
-
-    memories.forEach((memory, index) => {
-      const div = document.createElement("div");
-      div.style.border = "1px solid #ccc";
-      div.style.padding = "1rem";
-      div.style.marginBottom = "1rem";
-      div.style.borderRadius = "10px";
-      div.style.backgroundColor = "#fff";
-
-      div.innerHTML = `
-        <h3>${memory.date}</h3>
-        <p>${memory.event}</p>
-        <img src="${memory.image}" width="200" style="border-radius: 10px;"><br>
-        <button onclick="deleteMemory(${index})" style="margin-top: 10px; background-color: #ff6f91; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px;">Delete</button>
-      `;
-
-      container.appendChild(div);
+      if (file) {
+        reader.readAsDataURL(file);
+      } else {
+        reader.onload();
+      }
     });
-  }
 
-  // Function to delete a memory
-  function deleteMemory(index) {
-    let memories = JSON.parse(localStorage.getItem("memories")) || [];
-    memories.splice(index, 1); // Remove memory by index
-    localStorage.setItem("memories", JSON.stringify(memories));
-    displayMemories(); // Refresh list
-  }
-
-  // Call displayMemories on page load
-  window.onload = displayMemories;
-</script>
-
+    // Display an entry in the diary
+    function displayEntry(entry) {
+      const entryHTML = `
+        <div class="entry">
+          <h3>📅 ${entry.date}</h3>
+          <p>${entry.event}</p>
+          ${entry.imageUrl ? `<img src="${entry.imageUrl}" alt="Memory Image" />` : ''}
+        </div>
+      `;
+      entriesContainer.innerHTML += entryHTML;
+    }
+  </script>
   <footer style="text-align: center; padding: 1rem; background-color: #ffe0e6; color: #333; font-size: 0.9rem; margin-top: 2rem;">
   Created with ❤️ by <strong>Krithik Narayan</strong><br>
   Student at VIT Vellore
