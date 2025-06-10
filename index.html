@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>The Love Diary</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fffafc;
+      color: #4a2c2a;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      text-align: center;
+      background-color: #ffe0e6;
+      padding: 2rem 1rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #b1004b;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 2rem auto;
+      padding: 1rem;
+    }
+
+    form {
+      background-color: #fff0f5;
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      margin-bottom: 2rem;
+    }
+
+    form input, form textarea {
+      width: 100%;
+      padding: 0.7rem;
+      margin-top: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    form button {
+      background-color: #e75480;
+      color: white;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .entries {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .entry {
+      background: #fff;
+      border-left: 5px solid #ff6f91;
+      padding: 1rem;
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+    }
+
+    .entry img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 1rem;
+      border-radius: 8px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>💖 The Love Diary 💖</h1>
+  </header>
+
+  <div class="container">
+    <form id="memoryForm">
+      <label for="date">Date of Memory:</label>
+      <input type="date" id="date" required />
+
+      <label for="event">Describe the Memory:</label>
+      <textarea id="event" rows="4" placeholder="Your special moment..." required></textarea>
+
+      <label for="image">Upload an Image:</label>
+      <input type="file" id="image" accept="image/*" />
+
+      <button type="submit">Add to Diary</button>
+    </form>
+
+    <div class="entries" id="entriesContainer"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById('memoryForm');
+    const entriesContainer = document.getElementById('entriesContainer');
+
+    // Load entries from localStorage on page load
+    window.onload = function () {
+      const savedEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
+      savedEntries.forEach(entry => displayEntry(entry));
+    };
+
+    // Save and display new entry
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const date = document.getElementById('date').value;
+      const event = document.getElementById('event').value;
+      const imageInput = document.getElementById('image');
+      const file = imageInput.files[0];
+
+      const reader = new FileReader();
+
+      reader.onload = function() {
+        const imageUrl = file ? reader.result : '';
+        const newEntry = { date, event, imageUrl };
+
+        // Save to localStorage
+        const existingEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
+        existingEntries.push(newEntry);
+        localStorage.setItem('loveDiaryEntries', JSON.stringify(existingEntries));
+
+        displayEntry(newEntry);
+        form.reset();
+      };
+
+      if (file) {
+        reader.readAsDataURL(file);
+      } else {
+        reader.onload();
+      }
+    });
+
+    // Display an entry in the diary
+    function displayEntry(entry) {
+      const entryHTML = `
+        <div class="entry">
+          <h3>📅 ${entry.date}</h3>
+          <p>${entry.event}</p>
+          ${entry.imageUrl ? `<img src="${entry.imageUrl}" alt="Memory Image" />` : ''}
+        </div>
+      `;
+      entriesContainer.innerHTML += entryHTML;
+    }
+  </script>
+</body>
+</html>
