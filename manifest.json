@@ -1,0 +1,15 @@
+{
+  "name": "The Love Diary",
+  "short_name": "LoveDiary",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ffe0e6",
+  "theme_color": "#ff6f91",
+  "icons": [
+    {
+      "src": "icon.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    }
+  ]
+}
