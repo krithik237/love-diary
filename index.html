@@ -108,7 +108,8 @@
       <textarea id="event" rows="4" placeholder="Your special moment..." required></textarea>
 
       <label for="image">Upload an Image:</label>
-      <input type="file" id="image" accept="image/*" />
+      <input type="file" id="image" accept="image/*" multiple />
+
 
       <button type="submit">Add to Diary</button>
     </form>
@@ -116,14 +117,11 @@
     <div class="entries" id="entriesContainer"></div>
   </div>
 
- <script>
+<script>
   const form = document.getElementById('memoryForm');
   const entriesContainer = document.getElementById('entriesContainer');
 
-  // Load entries from localStorage on page load
-  document.addEventListener('DOMContentLoaded', function () {
-    loadEntries();
-  });
+  document.addEventListener('DOMContentLoaded', loadEntries);
 
   function loadEntries() {
     entriesContainer.innerHTML = '';
@@ -131,60 +129,69 @@
     savedEntries.forEach((entry, index) => displayEntry(entry, index));
   }
 
-  // Save and display new entry
   form.addEventListener('submit', function (e) {
     e.preventDefault();
 
     const date = document.getElementById('date').value;
     const event = document.getElementById('event').value;
     const imageInput = document.getElementById('image');
-    const file = imageInput.files[0];
+    const files = imageInput.files;
 
-    const reader = new FileReader();
-
-    reader.onload = function () {
-      const imageUrl = file ? reader.result : '';
-      const newEntry = { date, event, imageUrl };
-
-      const existingEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
-      existingEntries.push(newEntry);
-      localStorage.setItem('loveDiaryEntries', JSON.stringify(existingEntries));
-
-      loadEntries(); // refresh the list
-      form.reset();
-    };
-
-    if (file) {
-      reader.readAsDataURL(file);
+    if (files.length === 0) {
+      saveEntry({ date, event, imageUrls: [] });
     } else {
-      reader.onload();
+      const imageUrls = [];
+      let loaded = 0;
+
+      for (let i = 0; i < files.length; i++) {
+        const reader = new FileReader();
+        reader.onload = function () {
+          imageUrls.push(reader.result);
+          loaded++;
+          if (loaded === files.length) {
+            saveEntry({ date, event, imageUrls });
+          }
+        };
+        reader.readAsDataURL(files[i]);
+      }
     }
   });
 
-  // Display an entry in the diary
+  function saveEntry(newEntry) {
+    const existingEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
+    existingEntries.push(newEntry);
+    localStorage.setItem('loveDiaryEntries', JSON.stringify(existingEntries));
+    form.reset();
+    loadEntries();
+  }
+
   function displayEntry(entry, index) {
     const entryDiv = document.createElement('div');
     entryDiv.classList.add('entry');
 
+    let imagesHTML = '';
+    if (entry.imageUrls && entry.imageUrls.length > 0) {
+      imagesHTML = entry.imageUrls.map(url => `<img src="${url}" alt="Memory Image" />`).join('');
+    }
+
     entryDiv.innerHTML = `
       <h3>📅 ${entry.date}</h3>
       <p>${entry.event}</p>
-      ${entry.imageUrl ? `<img src="${entry.imageUrl}" alt="Memory Image" />` : ''}
+      ${imagesHTML}
       <button onclick="deleteEntry(${index})" style="margin-top: 10px; background-color: #ff6f91; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">Delete</button>
     `;
 
     entriesContainer.appendChild(entryDiv);
   }
 
-  // Delete an entry by index
   function deleteEntry(index) {
     const entries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
-    entries.splice(index, 1); // remove 1 item at index
+    entries.splice(index, 1);
     localStorage.setItem('loveDiaryEntries', JSON.stringify(entries));
-    loadEntries(); // reload display
+    loadEntries();
   }
 
-  // Optional test for localStorage
+  // Optional localStorage test
   try {
     localStorage.setItem("test", "check");
     const value = localStorage.getItem("test");
@@ -199,6 +206,7 @@
     console.log(e);
   }
 </script>
+
 
 
 
