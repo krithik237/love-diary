@@ -116,59 +116,76 @@
     <div class="entries" id="entriesContainer"></div>
   </div>
 
-  <script>
-    const form = document.getElementById('memoryForm');
-    const entriesContainer = document.getElementById('entriesContainer');
+ <script>
+  const form = document.getElementById('memoryForm');
+  const entriesContainer = document.getElementById('entriesContainer');
 
-    // Load entries from localStorage on page load
-    window.onload = function () {
-      const savedEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
-      savedEntries.forEach(entry => displayEntry(entry));
+  // Load entries from localStorage on page load
+  document.addEventListener('DOMContentLoaded', function () {
+    loadEntries();
+  });
+
+  function loadEntries() {
+    entriesContainer.innerHTML = '';
+    const savedEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
+    savedEntries.forEach((entry, index) => displayEntry(entry, index));
+  }
+
+  // Save and display new entry
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const date = document.getElementById('date').value;
+    const event = document.getElementById('event').value;
+    const imageInput = document.getElementById('image');
+    const file = imageInput.files[0];
+
+    const reader = new FileReader();
+
+    reader.onload = function () {
+      const imageUrl = file ? reader.result : '';
+      const newEntry = { date, event, imageUrl };
+
+      const existingEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
+      existingEntries.push(newEntry);
+      localStorage.setItem('loveDiaryEntries', JSON.stringify(existingEntries));
+
+      loadEntries(); // refresh the list
+      form.reset();
     };
 
-    // Save and display new entry
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const date = document.getElementById('date').value;
-      const event = document.getElementById('event').value;
-      const imageInput = document.getElementById('image');
-      const file = imageInput.files[0];
-
-      const reader = new FileReader();
-
-      reader.onload = function() {
-        const imageUrl = file ? reader.result : '';
-        const newEntry = { date, event, imageUrl };
-
-        // Save to localStorage
-        const existingEntries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
-        existingEntries.push(newEntry);
-        localStorage.setItem('loveDiaryEntries', JSON.stringify(existingEntries));
-
-        displayEntry(newEntry);
-        form.reset();
-      };
-
-      if (file) {
-        reader.readAsDataURL(file);
-      } else {
-        reader.onload();
-      }
-    });
-
-    // Display an entry in the diary
-    function displayEntry(entry) {
-      const entryHTML = `
-        <div class="entry">
-          <h3>📅 ${entry.date}</h3>
-          <p>${entry.event}</p>
-          ${entry.imageUrl ? `<img src="${entry.imageUrl}" alt="Memory Image" />` : ''}
-        </div>
-      `;
-      entriesContainer.innerHTML += entryHTML;
+    if (file) {
+      reader.readAsDataURL(file);
+    } else {
+      reader.onload();
     }
-     try {
+  });
+
+  // Display an entry in the diary
+  function displayEntry(entry, index) {
+    const entryDiv = document.createElement('div');
+    entryDiv.classList.add('entry');
+
+    entryDiv.innerHTML = `
+      <h3>📅 ${entry.date}</h3>
+      <p>${entry.event}</p>
+      ${entry.imageUrl ? `<img src="${entry.imageUrl}" alt="Memory Image" />` : ''}
+      <button onclick="deleteEntry(${index})" style="margin-top: 10px; background-color: #ff6f91; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">Delete</button>
+    `;
+
+    entriesContainer.appendChild(entryDiv);
+  }
+
+  // Delete an entry by index
+  function deleteEntry(index) {
+    const entries = JSON.parse(localStorage.getItem('loveDiaryEntries')) || [];
+    entries.splice(index, 1); // remove 1 item at index
+    localStorage.setItem('loveDiaryEntries', JSON.stringify(entries));
+    loadEntries(); // reload display
+  }
+
+  // Optional test for localStorage
+  try {
     localStorage.setItem("test", "check");
     const value = localStorage.getItem("test");
     if (value === "check") {
@@ -181,7 +198,8 @@
     alert("⚠️ localStorage is not supported or blocked.");
     console.log(e);
   }
-  </script>
+</script>
+
 
 
   <footer style="text-align: center; padding: 1rem; background-color: #ffe0e6; color: #333; font-size: 0.9rem; margin-top: 2rem;">
