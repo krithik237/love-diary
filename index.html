@@ -113,6 +113,12 @@
 
       <button type="submit">Add to Diary</button>
     </form>
+    <div style="text-align: center; margin-top: 1rem;">
+  <button type="button" onclick="exportMemories()">📤 Export Diary</button>
+  <input type="file" id="importFile" style="display:none" accept=".json" onchange="importMemories(event)">
+  <button type="button" onclick="document.getElementById('importFile').click()">📥 Import Diary</button>
+</div>
+
 
     <div class="entries" id="entriesContainer"></div>
   </div>
@@ -190,6 +196,46 @@
     localStorage.setItem('loveDiaryEntries', JSON.stringify(entries));
     loadEntries();
   }
+  // Export localStorage to JSON file
+function exportMemories() {
+  const data = localStorage.getItem('loveDiaryEntries') || '[]';
+  const blob = new Blob([data], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'love-diary-export.json';
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+// Import JSON file and replace entries
+function importMemories(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const importedData = JSON.parse(e.target.result);
+      if (Array.isArray(importedData)) {
+        const confirmReplace = confirm("This will replace your current diary. Continue?");
+        if (confirmReplace) {
+          localStorage.setItem('loveDiaryEntries', JSON.stringify(importedData));
+          loadEntries(); // Reload UI
+          alert("✅ Diary imported successfully!");
+        }
+      } else {
+        alert("❌ Invalid file format.");
+      }
+    } catch (err) {
+      alert("⚠️ Failed to import file. Please try again.");
+    }
+  };
+  reader.readAsText(file);
+}
+
 
   // Optional localStorage test
   try {
